@@ -145,7 +145,7 @@ class hx_Grid {
 
         var posA = this.offset_to_cube(A);
         var posB = this.offset_to_cube(B);
-
+        console.log(posA)
         return console.log(this.findDistance(posA, posB))
     }
 
@@ -157,10 +157,11 @@ class hx_Grid {
     }
 
     offset_to_cube(cords){
-        var x = cords[0] - (cords[1] + (cords[1]%2)) / 2
+        console.log(cords)
+        var x = cords[0] - (cords[1] + 1) / 2
         var z = cords[1]
         var y = -x-z
-        
+        console.log(x,y,z)
         return {
             'x':x,
             'y':y,
@@ -170,5 +171,9 @@ class hx_Grid {
 
     findDistance(posA, posB){
         return (Math.abs(posA.x - posB.x) + Math.abs(posA.y - posB.y) + Math.abs(posA.z - posB.z)) / 2
+    }
+
+    heurustic(){
+        return 1;
     }
 }

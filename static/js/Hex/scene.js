@@ -57,7 +57,7 @@ class hx_Scene {
 
     onWindowResize(){
 
-        this.hx_scene.camera().aspect = window.innerWidth / window.innerHeight;
+        this.hx_scene.camera.aspect = window.innerWidth / window.innerHeight;
         this.hx_scene._camera.updateProjectionMatrix();
     
         this.hx_scene._renderer.setSize( window.innerWidth*.75, window.innerHeight*.75 );
@@ -128,7 +128,7 @@ class hx_Scene {
     }
 
     cellNeighbor(pos, mark){
-        console.log(hx_grid.findNeighbor(pos, mark, "object"));
+        //console.log(hx_grid.findNeighbor(pos, mark, "object"));
     }
 
 
