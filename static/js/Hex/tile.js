@@ -7,7 +7,15 @@ class hx_Tile {
             h:0
         }
         this.selected = false;
-        this.gamedata = {}
+        this.gamedata = {
+            'edgeCost': 1,
+            'neighborhood': null,
+            'stayCost': 1,
+        }
+        this.gamedata['children'] = {
+            'buildings': [],
+            'players': [],
+        }
         this.Hexgeometry =new THREE.CylinderBufferGeometry( 1, 1, .5, 6 );
         this.Hexmaterial = new THREE.MeshBasicMaterial( {color: this.color} );
         this.Tile = new THREE.Mesh( this.Hexgeometry, this.Hexmaterial );
@@ -16,6 +24,7 @@ class hx_Tile {
         this.WireframeMat = new THREE.LineBasicMaterial( { color: 0x000000, linewidth: 2 } );
         this.Wireframe = new THREE.LineSegments( this.WireframeGeometry, this.WireframeMat );
         this.Tile.add( this.Wireframe );
+        
     }
   
     get tile(){

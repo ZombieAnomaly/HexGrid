@@ -120,33 +120,95 @@ class hx_Grid {
     }
 
     validateNeighbors(arr, clicked){
+        var newArr = []
         for(var i=0;i<arr.length;i++){
             var key = String(arr[i][0]+","+arr[i][1]);
             if (!(key in this.cells)){
-                arr[i] = null;
+                continue;
             }
-            arr[i] = this.cells[key]
-            if (clicked && arr[i] != undefined){
-                arr[i].hx_tile.Tile.material.opacity = 0
-                arr[i].hx_tile.Tile.material.transparent = true;
-                arr[i].hx_tile.Tile.material.color.set( 0xFFFFFF );
+            newArr[newArr.length] = this.cells[key]
+            if (clicked){
+                newArr[newArr.length-1].hx_tile.Tile.material.opacity = 0
+                newArr[newArr.length-1].hx_tile.Tile.material.transparent = true;
+                newArr[newArr.length-1].hx_tile.Tile.material.color.set( 0xFFFFFF );
             }
         }
         
-        return arr;
+        return newArr;
     }
 
-    calculatePath(A,B){
-        this.findNeighbor({'x':A[0], 'y':A[1]}, false, 'array')
-        console.log(A);
+    calculatePath(A,B, greedyWeight, dijkstrasWeight){
+        //console.log(A)
+        var key = String(A[0]) + "," + String(A[1])
+        var PQ = new PriorityQueue();
+        PQ.push(A,0);
+        var came_from = {}
+        var cost_so_far = {};
+        came_from[key] = null;
+        cost_so_far[key] = 0;
+
+        while(PQ.empty() == false){
+            var runner = PQ.pop();
+            console.log(runner, B);
+
+            if(runner.item == B)
+                break;
+            
+            //var _key = String(runner.item[0]) + "," + String(runner.item[1])   
+            //console.log(this.grid[_key].hx_tile.gamedata['edgeCost']);
+            var neighbors = this.findNeighbor({'x':runner.item[0], 'y':runner.item[1]}, false, 'object')
+
+            for(var n in neighbors){
+                var n_key = String(neighbors[n].hx_cell.Cell.pos.x) + "," + String(neighbors[n].hx_cell.Cell.pos.y) 
+                var new_cost = cost_so_far[key]  + this.nodeCost(key, n_key) 
+
+                if (cost_so_far.hasOwnProperty(n_key) == false || new_cost < cost_so_far[n_key]){
+                    cost_so_far[n_key] = new_cost;
+                    var pos = [neighbors[n].hx_cell.Cell.pos.x, neighbors[n].hx_cell.Cell.pos.y]
+                    var h = this.heuristic( this.calculateDistance(pos, B), greedyWeight, dijkstrasWeight, this.nodeCost(key, n_key));
+                    var priority = new_cost + h;  //f(n) = g(n) + h(n)
+                    //console.log(pos)
+                    PQ.push(pos,priority);
+                    came_from[n_key] = runner.item;
+                }
+            }
+        }
+        console.log(came_from);
+        var path = this.reconstruct_path(came_from,A,B);
+        console.log(path);
+        return path;
+    }
+
+    reconstruct_path(came_from, A, B){
+        var current = B
+        var path = []
+        while (current != A){
+            path.push(current)
+            current = came_from[current]
+        }
+        path.push(A)
+        path.reverse()
+        return path;
+    }
+
+    nodeCost(A,B){
+        //console.log(A,B);
+        return this.cells[A].hx_tile.gamedata.edgeCost + this.cells[B].hx_tile.gamedata.edgeCost;
+    }
+
+    heuristic(h,w1,w2,cost){
+        //console.log(h,w1,w2,cost);
+        h += h * w1;
+        var c = cost * w2;
+        return h + c;
     }
 
     calculateDistance(A,B){
 
         var posA = this.offset_to_cube(A);
         var posB = this.offset_to_cube(B);
-        console.log(posA)
-        return console.log(this.findDistance(posA, posB))
+        //console.log(posA)
+        return this.findDistance(posA, posB)
     }
 
     cube_to_evenr(cords){
@@ -157,11 +219,9 @@ class hx_Grid {
     }
 
     offset_to_cube(cords){
-        console.log(cords)
         var x = cords[0] - (cords[1] + 1) / 2
         var z = cords[1]
         var y = -x-z
-        console.log(x,y,z)
         return {
             'x':x,
             'y':y,

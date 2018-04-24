@@ -19,6 +19,7 @@ class hx_Scene {
             'A': null,
             'B': null
         }
+        this._loader = new THREE.JSONLoader();
         var green = new THREE.Color( 0x40C843 );
 
 
@@ -33,7 +34,9 @@ class hx_Scene {
     get renderer(){
         return this._renderer;
     }
-
+    loader(){
+        return this._loader;
+    }
     get camera(){
         return this._camera
     }
@@ -78,6 +81,10 @@ class hx_Scene {
         
         var intersects = this.hx_scene.raycaster.intersectObjects( this.hx_scene._scene.children );
             
+            if (intersects.length < 1){
+                return;
+            }
+
             intersects[ intersects.length-1 ].object.selected = !intersects[ intersects.length-1 ].object.selected;
 
             console.log(intersects[ intersects.length-1 ].object.pos);
@@ -92,6 +99,10 @@ class hx_Scene {
                     intersects[ intersects.length-1 ].object.material.transparent = false;
                     intersects[ intersects.length-1 ].object.material.color.set( 0xFF0000 );
                 }else{ //if a tile turn transparent
+                    var geometry = new THREE.BoxBufferGeometry( .2, .5, .2 );
+                    var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
+                    var cubeA = new THREE.Mesh( geometry, material );
+
                     if(this.AStar = true){
                         this.StartMarker = !this.StartMarker;
                         if(!this.StartMarker){
@@ -100,7 +111,11 @@ class hx_Scene {
                             x = intersects[ intersects.length-1 ].object.pos.x;
                             y = intersects[ intersects.length-1 ].object.pos.y;
                             this.hx_scene.points['B'] = [x,y];
-                            hx_grid.calculateDistance(this.hx_scene.points['A'], this.hx_scene.points['B']);
+                            var path = hx_grid.calculatePath(this.hx_scene.points['A'], this.hx_scene.points['B'],1,1);
+                            for(var cords in path){
+                                var key = String(path[cords][0]) + "," + String(path[cords][1])
+                                hx_grid.grid[key].hx_tile.Tile.material.color.set( 0x1DF800 )
+                            }
                         }else{
                             intersects[ intersects.length-1 ].object.material.color.set( 0xFF0000 );  
                             var x,y;
@@ -108,6 +123,17 @@ class hx_Scene {
                             y = intersects[ intersects.length-1 ].object.pos.y;
                             this.hx_scene.points['A'] = [x,y];
                         }
+                        var pos = intersects[ intersects.length-1 ].object.pos
+                        var key = String(pos.x) + "," + String(pos.y)
+                        
+                        intersects[ intersects.length-1 ].object.add(cubeA);
+                        var t = intersects[ intersects.length-1 ].object
+                        var offset = t.width*.25
+                        cubeA.position.set(t.position.x+.25, 0.5 , t.position.z-.25)
+                        this.scene.add(cubeA);
+                        hx_grid.grid[key].hx_tile.gamedata['children'].buildings.push(cubeA);
+                        //console.log(hx_grid.grid[key])
+                        
                     }
                     //intersects[ intersects.length-1 ].object.material.opacity = 0
                     //intersects[ intersects.length-1 ].object.material.transparent = true;
@@ -128,7 +154,7 @@ class hx_Scene {
     }
 
     cellNeighbor(pos, mark){
-        //console.log(hx_grid.findNeighbor(pos, mark, "object"));
+        console.log(hx_grid.findNeighbor(pos, mark, "object"));
     }
 
 

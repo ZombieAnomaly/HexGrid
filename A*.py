@@ -3,7 +3,6 @@ from termcolor import colored
 import time, random
 
 
-
 class SquareGrid:
     def __init__(self, width, height):
         self.width = width
@@ -54,7 +53,6 @@ def dijkstra_search(graph, start, goal):
         
         for next in graph.neighbors(current):
             new_cost = cost_so_far[current]  + graph.cost(current, next)
-            # f(n) = g(n) + h(n)
 
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
@@ -80,24 +78,20 @@ def Astar_search(graph, start, goal, greedyWeight, dijkstrasWeight):
         
         for next in graph.neighbors(current):
             new_cost = cost_so_far[current]  + graph.cost(current, next)
-            # f(n) = g(n) + h(n)
 
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
                 h = heuristic( graph.distance(next, goal), greedyWeight, dijkstrasWeight, graph.cost(current, next))
-                priority = new_cost + h
-                print("{}-{} | P: {} | H: {} | g(n): {} | h(n): {} | cost: {}".format(current,next, priority,h, graph.distance(next, start), graph.distance(next, goal), graph.cost(current, next)) )
+                priority = new_cost + h  #f(n) = g(n) + h(n)
                 frontier.put(next, priority)
                 came_from[next] = current
-    
+                #print("{}-{} | P: {} | H: {} | g(n): {} | h(n): {} | cost: {}".format(current,next, priority,h, graph.distance(next, start), graph.distance(next, goal), graph.cost(current, next)) )
+
     return came_from, cost_so_far
 
 def heuristic(h,w1,w2,cost):
-    #(3, 6)-(4, 6) | P: 13.6 | H: 9.6 | g(n): 5 | h(n): 6 | cost: 3
-    #(4, 6)-(4, 7) | P: 13.5 | H: 8.5 | g(n): 6 | h(n): 5 | cost: 3
-    
-    h += h * w1
-    c = cost * w2
+    h += h * int(w1)
+    c = cost * int(w2)
     return h + c
 
 def reconstruct_path(came_from, start, goal):
@@ -112,7 +106,6 @@ def reconstruct_path(came_from, start, goal):
 
 def from_id_width(id, width):
     return (id % width, id // width)
-
 
 def draw_tile(graph, id, style, width):
     r = " . "
@@ -147,8 +140,41 @@ def draw_grid(graph, width=1, **style):
         print(row)
         print()
 
+def CallForInput():
+    _input = input(colored('0 - execute Dijkstra ','blue') +'|'+ colored(' 1 - execute A*', 'red') + ' | '+ colored('2 - set greedy weight [{}]'.format(greedyWeight),'yellow') +' | '+colored('3 - set Dijkstras weight [{}]'.format(dijkstrasWeight)) + '| - ')
+    checkInput(_input)
 
-def execute(greedyWeight, dijkstrasWeight, weights, gridx, gridy):
+def checkInput(_input):
+    
+    global greedyWeight, dijkstrasWeight
+
+    if _input == "exit" or _input == "e":
+        print("Goodbye.")
+        return
+    if _input == "" or _input == " ":
+        return CallForInput()
+
+    try:
+        int(_input)
+        
+        if int(_input) == 1:
+            return execute("A*",greedyWeight, dijkstrasWeight, weights, gridx, gridy)
+        elif int(_input) == 0:
+            return execute("Dijkstra",greedyWeight, dijkstrasWeight, weights, gridx, gridy)
+        elif int(_input) == 2:
+            _input = input('set greedy weight: ')
+            greedyWeight = float(_input)
+            print("greedyWeight: {}".format(greedyWeight))
+        elif int(_input) == 3:
+            _input = input('set dijkstras weight: ')
+            dijkstrasWeight = float(_input)
+            print("greedyWeight: {}".format(dijkstrasWeight))
+        CallForInput()
+    except:
+        print("invalid syntax!")
+        return CallForInput()
+
+def execute(type, greedyWeight, dijkstrasWeight, weights, gridx, gridy):
     '''
     grid = GridWithWeights(gridx, gridy)     
     grid.weights = weights       
@@ -168,9 +194,10 @@ def execute(greedyWeight, dijkstrasWeight, weights, gridx, gridy):
     
     start_time = time.time()
 
-    came_from, cost_so_far = Astar_search(grid, start, goal, greedyWeight, dijkstrasWeight)
-
-
+    if type == "Dijkstra":
+        came_from, cost_so_far = dijkstra_search(grid, start, goal) 
+    else:
+        came_from, cost_so_far = Astar_search(grid, start, goal, greedyWeight, dijkstrasWeight)
 
     print()
     print('Basic graph with weights')
@@ -190,41 +217,19 @@ def execute(greedyWeight, dijkstrasWeight, weights, gridx, gridy):
     print( len(reconstruct_path(came_from, start=start, goal=goal)) )
     print("--- %s seconds ---" % ((time.time() - start_time) ))
 
-    _input = input('0 - exit | 1 - execute | 2 - increase greedy weight | 3 - decrease greedy weight | 4 - increase dijkstras weight | 5 - decrease dijkstras weight | - ')
-    checkInput(_input,greedyWeight, dijkstrasWeight)
+    CallForInput()
 
 start = (1,4)
 goal = (7,8)
 gridx, gridy = 10,10
-greedyWeight = .1
+greedyWeight = 1
 dijkstrasWeight = 1
 weights = {}
 for i in range(0,gridx):
     for j in range(0,gridy):
         key = (i,j)
         weights[key] = random.randrange(1,10)
+    
 
-def checkInput(_input,greedyWeight, dijkstrasWeight):
-    if int(_input) == 1:
-        return execute(greedyWeight, dijkstrasWeight, weights, gridx, gridy)
-    elif int(_input) == 2:
-        greedyWeight += .1
-        print("greedyWeight: {}".format(greedyWeight))
-        _input = input('0 - exit | 1 - execute | 2 - increase greedy weight | 3 - decrease greedy weight | 4 - increase dijkstras weight | 5 - decrease dijkstras weight | - ')
-    elif int(_input) == 3:
-        greedyWeight -= .1
-        print("greedyWeight: {}".format(greedyWeight))
-        _input = input('0 - exit | 1 - execute | 2 - increase greedy weight | 3 - decrease greedy weight | 4 - increase dijkstras weight | 5 - decrease dijkstras weight | - ')
-    elif int(_input) == 4:
-        dijkstrasWeight += .1
-        print("dijkstrasWeight: {}".format(dijkstrasWeight))
-        _input = input('0 - exit | 1 - execute | 2 - increase greedy weight | 3 - decrease greedy weight | 4 - increase dijkstras weight | 5 - decrease dijkstras weight | - ')
-    elif int(_input) == 5:
-        dijkstrasWeight -= .1
-        print("dijkstrasWeight: {}".format(dijkstrasWeight))
-        _input = input('0 - exit | 1 - execute | 2 - increase greedy weight | 3 - decrease greedy weight | 4 - increase dijkstras weight | 5 - decrease dijkstras weight | - ')
-    
-    checkInput(_input, greedyWeight, dijkstrasWeight)
-    
-_input = input('0 - exit | 1 - execute | 2 - increase greedy weight | 3 - decrease greedy weight | 4 - increase dijkstras weight | 5 - decrease dijkstras weight | - ')
-checkInput(_input, greedyWeight, dijkstrasWeight)
+print("Welcome to my pathfind...thing")
+CallForInput()
